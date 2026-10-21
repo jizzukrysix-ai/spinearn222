@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Quantum Vault - Protocol Spin & Earn</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a0e17 0%, #16213e 100%);
+      font-family: -apple-system, 'Segoe UI', 'Poppins', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px;
+      color: #f8fafc;
+    }
+
+    .app-container {
+      max-width: 450px;
+      width: 100%;
+      margin: 0 auto;
+      background: linear-gradient(180deg, #0f0f23 0%, #1a1a3e 100%);
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .stats-header {
+      background: rgba(0,0,0,0.4);
+      padding: 20px 20px 16px;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,242,254,0.2);
+    }
+
+    .balance-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .coin-balance {
+      background: linear-gradient(135deg, #00f2fe, #00a8ff);
+      padding: 8px 18px;
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: bold;
+      font-size: 1.3rem;
+      color: #000;
+    }
+
+    .level-badge {
+      background: rgba(255,255,255,0.1);
+      padding: 6px 14px;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      color: #00f2fe;
+      border: 1px solid rgba(0,242,254,0.3);
+    }
+
+    .streak-section {
+      background: rgba(255,255,255,0.03);
+      border-radius: 20px;
+      padding: 10px 14px;
+      margin-top: 8px;
+    }
+
+    .streak-title {
+      font-size: 0.7rem;
+      color: #64748b;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .streak-days {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .day-card {
+      flex: 1;
+      text-align: center;
+      background: rgba(0,0,0,0.3);
+      padding: 6px 2px;
+      border-radius: 10px;
+      font-size: 0.65rem;
+      color: #aaa;
+    }
+
+    .day-card.active {
+      background: linear-gradient(135deg, #00f2fe, #00a8ff);
+      color: #000;
+      font-weight: bold;
+    }
+
+    .day-card.claimed {
+      background: #10b981;
+      color: #fff;
+    }
+
+    .spin-section {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .wheel-container {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      margin: 0 auto 16px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .spin-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 65px;
+      height: 65px;
+      background: linear-gradient(135deg, #00f2fe, #00a8ff);
+      border: none;
+      border-radius: 50%;
+      font-size: 0.9rem;
+      cursor: pointer;
+      color: #000;
+      font-weight: 800;
+      z-index: 10;
+    }
+
+    .mining-section {
+      background: rgba(0,0,0,0.2);
+      margin: 0 20px 20px;
+      border-radius: 24px;
+      padding: 14px;
+    }
+
+    .mine-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none;
+      padding: 14px;
+      border-radius: 40px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .ad-bonus-btn {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      border: none;
+      padding: 12px;
+      border-radius: 30px;
+      color: white;
+      font-weight: bold;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .bottom-nav {
+      display: flex;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(20px);
+      padding: 8px 16px 16px;
+      justify-content: space-around;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      color: #64748b;
+      font-size: 0.65rem;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      color: #00f2fe;
+    }
+
+    .page { display: none; }
+    .page.active-page { display: block; }
+
+    .info-text {
+      text-align: center;
+      font-size: 0.68rem;
+      color: #64748b;
+      padding: 8px;
+    }
+
+    .reward-notification {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #00f2fe;
+      color: #000;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      z-index: 1000;
+    }
+  </style>
+  <script src="https://adsgram.ai/js/adsgram.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+</head>
+<body>
+<div class="app-container" id="app">
+  <div class="stats-header">
+    <div class="balance-row">
+      <div class="coin-balance">
+        <span>🪙</span>
+        <span id="balanceAmount">100</span>
+      </div>
+      <div class="level-badge">⭐ Tier 1 Node</div>
+    </div>
+    
+    <div class="streak-section">
+      <div class="streak-title">📅 PROTOCOL STREAK SYNC</div>
+      <div class="streak-days" id="streakContainer"></div>
+    </div>
+  </div>
+
+  <!-- MAIN GAME PAGE -->
+  <div id="mainPage" class="page active-page">
+    <div class="spin-section">
+      <div class="wheel-container">
+        <canvas id="wheelCanvas" width="400" height="400"></canvas>
+        <button class="spin-btn" id="spinButton">SPIN</button>
+      </div>
+    </div>
+
+    <div class="mining-section">
+      <button class="mine-btn" id="mineButton">⚡ COMPUTE REWARD ⚡</button>
+      <button class="ad-bonus-btn" id="watchAdSpinBtn">
+        <span>📺</span> Watch Sponsor → +50 Protocol Spins
+      </button>
+    </div>
+    <div class="info-text">Secure token allocation terminal. Optional sponsor ads for extra credits.</div>
+  </div>
+
+  <!-- EARN PAGE -->
+  <div id="earnPage" class="page">
+    <div style="padding: 24px 20px; text-align: center;">
+      <h3 style="color:#00f2fe; font-size:1rem; margin-bottom:16px;">💎 NETWORK TASKS</h3>
+      <div class="card-box" style="background: rgba(255,255,255,0.03); border-radius: 16px; padding: 16px;">
+        <button id="earnAdBtn" class="ad-bonus-btn" style="background: #7c3aed; margin-bottom: 10px;">
+          🎁 Watch Sponsor → +100 Tokens
+        </button>
+        <button id="earnSpinAdBtn" class="ad-bonus-btn" style="background: #2563eb;">
+          🎰 Watch Sponsor → +1 Free Spin
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WATERDROP PAGE -->
+  <div id="waterdropPage" class="page">
+    <div style="padding: 24px 20px; text-align: center;">
+      <h3 style="color:#00f2fe; font-size:1rem; margin-bottom:12px;">💧 DAILY ALLOCATION</h3>
+      <div style="font-size: 3rem; margin: 20px;">💧</div>
+      <button id="dailyClaimBtn" class="mine-btn">CLAIM DAILY ALLOCATION</button>
+      <button id="waterdropAdBtn" class="ad-bonus-btn" style="margin-top: 10px; background: #059669;">
+        📺 Watch Sponsor → Double Daily Yield
+      </button>
+    </div>
+  </div>
+
+  <!-- WALLET PAGE -->
+  <div id="walletPage" class="page">
+    <div style="padding: 24px 20px; text-align: center;">
+      <h3 style="color:#00f2fe; font-size:1rem; margin-bottom:16px;">👛 VAULT BALANCE</h3>
+      <div class="coin-balance" style="justify-content: center; margin: 20px auto; width: fit-content;">
+        <span>🪙</span> <span id="walletBalance">100</span>
+      </div>
+      <div class="info-text">Secured in decentralized local terminal storage.</div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <button class="nav-item active" data-page="main"><span>🎰</span><span>SPIN</span></button>
+    <button class="nav-item" data-page="earn"><span>💰</span><span>TASKS</span></button>
+    <button class="nav-item" data-page="waterdrop"><span>💧</span><span>SYNC</span></button>
+    <button class="nav-item" data-page="wallet"><span>👛</span><span>WALLET</span></button>
+  </div>
+</div>
+
+<script>
+  let balance = 100;
+  let spinsAvailable = 3;
+  let lastMineTime = 0;
+  const MINE_COOLDOWN = 10000;
+  const MINE_REWARD = 15;
+
+  let streakDays = [false, false, false, false, false, false, false];
+  let lastClaimDate = null;
+  let currentStreakDay = 1;
+
+  const prizes = [5, 10, 20, 50, 100, 200, 500, 15, 25, 75, 150, 8];
+  const segments = 12;
+  let isSpinning = false;
+  let canvas, ctx;
+  let currentAngle = 0;
+
+  const ADSGRAM_BLOCK_ID = "YOUR_REWARDED_BLOCK_ID"; // Replace with your actual Block ID
+  let adsgramInstance = null;
+  
+  if (typeof Adsgram !== 'undefined') {
+    try {
+      adsgramInstance = Adsgram.init({ blockId: ADSGRAM_BLOCK_ID, debug: false });
+    } catch(e) {}
+  }
+
+  function showNotification(message, isError = false) {
+    const notif = document.createElement('div');
+    notif.className = 'reward-notification';
+    notif.textContent = message;
+    notif.style.background = isError ? '#ef4444' : '#00f2fe';
+    notif.style.color = '#000';
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 2000);
+  }
+
+  function updateBalanceUI() {
+    document.getElementById('balanceAmount').innerText = Math.floor(balance);
+    document.getElementById('walletBalance').innerText = Math.floor(balance);
+  }
+
+  function addCoins(amount, source = "reward") {
+    balance += amount;
+    updateBalanceUI();
+    showNotification(`+${amount} 🪙 [${source}]`);
+    saveGameData();
+  }
+
+  function performSpin(isFree = true) {
+    if (isSpinning) return false;
+    if (!isFree && spinsAvailable <= 0) {
+      showNotification("No spins left! Watch sponsor ad for +50 spins.", true);
+      return false;
+    }
+    if (!isFree) spinsAvailable--;
+    
+    isSpinning = true;
+    const spinButton = document.getElementById('spinButton');
+    spinButton.disabled = true;
+    
+    const randomSegment = Math.floor(Math.random() * segments);
+    const prizeValue = prizes[randomSegment];
+    const anglePerSegment = (Math.PI * 2) / segments;
+    const targetSegmentAngle = randomSegment * anglePerSegment;
+    const currentRotation = currentAngle % (Math.PI * 2);
+    let delta = (targetSegmentAngle - currentRotation);
+    const fullSpins = 8 * Math.PI * 2;
+    const finalDelta = delta + fullSpins;
+    
+    const startAngle = currentAngle;
+    const startTime = performance.now();
+    const duration = 2000;
+    
+    function animateSpin(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(1, elapsed / duration);
+      const ease = 1 - Math.pow(1 - t, 3);
+      currentAngle = startAngle + finalDelta * ease;
+      drawWheel();
+      if (t < 1) {
+        requestAnimationFrame(animateSpin);
+      } else {
+        currentAngle = currentAngle % (Math.PI * 2);
+        drawWheel();
+        addCoins(prizeValue, "Spin Reward");
+        isSpinning = false;
+        spinButton.disabled = false;
+        saveGameData();
+        updateSpinsUI();
+      }
+    }
+    requestAnimationFrame(animateSpin);
+    return true;
+  }
+
+  function mine() {
+    const now = Date.now();
+    if (now - lastMineTime < MINE_COOLDOWN) {
+      const remaining = Math.ceil((MINE_COOLDOWN - (now - lastMineTime)) / 1000);
+      showNotification(`⏳ Cooldown: ${remaining}s`, true);
+      return;
+    }
+    lastMineTime = now;
+    addCoins(MINE_REWARD, "Compute Reward");
+    saveGameData();
+  }
+
+  async function watchRewardedAd(onReward, desc) {
+    if (!adsgramInstance) {
+      if (confirm(`[Demo Mode] Simulate ad to get: ${desc}?`)) {
+        onReward();
+        showNotification(`Granted: ${desc}`);
+      }
+      return;
+    }
+    try {
+      const result = await adsgramInstance.showRewardedVideo();
+      if (result && result.done) {
+        onReward();
+        showNotification(`Verified: ${desc}`);
+        saveGameData();
+      } else {
+        showNotification("Ad incomplete", true);
+      }
+    } catch (err) {
+      showNotification("Ad error", true);
+    }
+  }
+
+  function giveSpinTokens() { spinsAvailable += 50; updateSpinsUI(); showNotification("+50 Spins Added!"); }
+  function giveHundredCoins() { addCoins(100, "Sponsor Reward"); }
+  function giveFreeSpin() { spinsAvailable += 1; updateSpinsUI(); showNotification("+1 Spin Added!"); }
+  function doubleDailyReward() { claimDailyReward(true); }
+
+  function claimDailyReward(double = false) {
+    const today = new Date().toDateString();
+    if (lastClaimDate === today) {
+      showNotification("Already claimed today!", true);
+      return false;
+    }
+    let reward = 50 + (currentStreakDay * 10);
+    if (double) reward *= 2;
+    addCoins(reward, "Daily Claim");
+    lastClaimDate = today;
+    currentStreakDay = Math.min(7, currentStreakDay + 1);
+    streakDays = streakDays.map((_, idx) => idx < currentStreakDay);
+    updateStreakUI();
+    saveGameData();
+    return true;
+  }
+
+  function updateSpinsUI() {
+    const spinBtn = document.getElementById('spinButton');
+    if (spinBtn) spinBtn.innerText = `SPIN\n(${spinsAvailable})`;
+  }
+  
+  function drawWheel() {
+    if (!canvas) return;
+    const size = canvas.width;
+    ctx.clearRect(0, 0, size, size);
+    const angleStep = (Math.PI * 2) / segments;
+    for (let i = 0; i < segments; i++) {
+      const start = i * angleStep + currentAngle;
+      const end = start + angleStep;
+      ctx.beginPath();
+      ctx.moveTo(size/2, size/2);
+      ctx.arc(size/2, size/2, size/2, start, end);
+      ctx.fillStyle = i % 2 === 0 ? '#1e293b' : '#334155';
+      ctx.fill();
+      ctx.save();
+      ctx.translate(size/2, size/2);
+      ctx.rotate(start + angleStep/2);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#00f2fe";
+      ctx.font = `bold ${size * 0.045}px "Segoe UI"`;
+      ctx.fillText(prizes[i], size * 0.32, 8);
+      ctx.restore();
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+  
+  function updateStreakUI() {
+    const container = document.getElementById('streakContainer');
+    container.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'day-card';
+      if (streakDays[i]) dayDiv.classList.add('claimed');
+      else if (i+1 === currentStreakDay && lastClaimDate !== new Date().toDateString()) dayDiv.classList.add('active');
+      dayDiv.innerHTML = `D${i+1}<br>${50 + (i+1)*10}`;
+      container.appendChild(dayDiv);
+    }
+  }
+  
+  function saveGameData() {
+    localStorage.setItem('spinGameData_v2', JSON.stringify({
+      balance, spinsAvailable, lastMineTime, streakDays, lastClaimDate, currentStreakDay
+    }));
+  }
+  
+  function loadGameData() {
+    const saved = localStorage.getItem('spinGameData_v2');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        balance = data.balance;
+        spinsAvailable = data.spinsAvailable;
+        lastMineTime = data.lastMineTime;
+        streakDays = data.streakDays || streakDays;
+        lastClaimDate = data.lastClaimDate;
+        currentStreakDay = data.currentStreakDay || 1;
+      } catch(e) {}
+    }
+    updateBalanceUI();
+    updateSpinsUI();
+    updateStreakUI();
+  }
+  
+  function initNavigation() {
+    const navBtns = document.querySelectorAll('.nav-item');
+    const pages = {
+      main: document.getElementById('mainPage'),
+      earn: document.getElementById('earnPage'),
+      waterdrop: document.getElementById('waterdropPage'),
+      wallet: document.getElementById('walletPage')
+    };
+    navBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pageId = btn.dataset.page;
+        Object.values(pages).forEach(p => p.classList.remove('active-page'));
+        pages[pageId].classList.add('active-page');
+        navBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  }
+  
+  function bindAdsButtons() {
+    document.getElementById('watchAdSpinBtn').onclick = () => watchRewardedAd(giveSpinTokens, "50 Spins");
+    document.getElementById('earnAdBtn').onclick = () => watchRewardedAd(giveHundredCoins, "100 Tokens");
+    document.getElementById('earnSpinAdBtn').onclick = () => watchRewardedAd(giveFreeSpin, "1 Free Spin");
+    document.getElementById('waterdropAdBtn').onclick = () => watchRewardedAd(() => doubleDailyReward(), "Double Daily Yield");
+    document.getElementById('dailyClaimBtn').onclick = () => claimDailyReward(false);
+  }
+  
+  function init() {
+    canvas = document.getElementById('wheelCanvas');
+    ctx = canvas.getContext('2d');
+    const size = Math.min(240, window.innerWidth * 0.6);
+    canvas.width = canvas.height = 400;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+    drawWheel();
+    
+    document.getElementById('spinButton').onclick = () => {
+      if (spinsAvailable > 0 && !isSpinning) performSpin(false);
+      else if (spinsAvailable <= 0) showNotification("No spins! Watch sponsor ad for more.", true);
+    };
+    document.getElementById('mineButton').onclick = () => mine();
+    
+    loadGameData();
+    initNavigation();
+    bindAdsButtons();
+    updateSpinsUI();
+    
+    if (window.Telegram && Telegram.WebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+    }
+  }
+  
+  init();
+</script>
+</body>
+</html>
