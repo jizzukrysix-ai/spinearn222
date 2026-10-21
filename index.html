@@ -141,7 +141,7 @@
       background: linear-gradient(135deg, #00f2fe, #00a8ff);
       border: none;
       border-radius: 50%;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       cursor: pointer;
       color: #000;
       font-weight: 800;
@@ -155,14 +155,27 @@
       padding: 14px;
     }
 
+    .mine-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none;
+      padding: 14px;
+      border-radius: 40px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
     .ad-bonus-btn {
       background: linear-gradient(135deg, #7c3aed, #6d28d9);
       border: none;
-      padding: 14px;
+      padding: 12px;
       border-radius: 30px;
       color: white;
       font-weight: bold;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -252,14 +265,12 @@
     </div>
 
     <div class="mining-section">
-      <button class="ad-bonus-btn" id="watchAdCoinBtn" style="background: linear-gradient(135deg, #10b981, #059669);">
-        📺 Watch Sponsor Ad → +50 Tokens
-      </button>
+      <button class="mine-btn" id="mineButton">⚡ COMPUTE REWARD ⚡</button>
       <button class="ad-bonus-btn" id="watchAdSpinBtn">
-        📺 Watch Sponsor Ad → +5 Spins
+        <span>📺</span> Watch Sponsor → +50 Protocol Spins
       </button>
     </div>
-    <div class="info-text">Non-forced rewarded ads. Watch sponsor videos to unlock extra credits.</div>
+    <div class="info-text">Secure token allocation terminal. Optional sponsor ads for extra credits.</div>
   </div>
 
   <!-- EARN PAGE -->
@@ -282,8 +293,9 @@
     <div style="padding: 24px 20px; text-align: center;">
       <h3 style="color:#00f2fe; font-size:1rem; margin-bottom:12px;">💧 DAILY ALLOCATION</h3>
       <div style="font-size: 3rem; margin: 20px;">💧</div>
-      <button id="waterdropAdBtn" class="ad-bonus-btn" style="background: #059669;">
-        📺 Watch Sponsor Ad → Claim Daily Yield
+      <button id="dailyClaimBtn" class="mine-btn">CLAIM DAILY ALLOCATION</button>
+      <button id="waterdropAdBtn" class="ad-bonus-btn" style="margin-top: 10px; background: #059669;">
+        📺 Watch Sponsor → Double Daily Yield
       </button>
     </div>
   </div>
@@ -311,6 +323,9 @@
 <script>
   let balance = 100;
   let spinsAvailable = 3;
+  let lastMineTime = 0;
+  const MINE_COOLDOWN = 10000;
+  const MINE_REWARD = 15;
 
   let streakDays = [false, false, false, false, false, false, false];
   let lastClaimDate = null;
@@ -322,6 +337,7 @@
   let canvas, ctx;
   let currentAngle = 0;
 
+  // Added your Block ID here
   const ADSGRAM_BLOCK_ID = "int-55303"; 
   let adsgramInstance = null;
   
@@ -356,7 +372,7 @@
   function performSpin(isFree = true) {
     if (isSpinning) return false;
     if (!isFree && spinsAvailable <= 0) {
-      showNotification("No spins left! Watch sponsor ad for spins.", true);
+      showNotification("No spins left! Watch sponsor ad for +50 spins.", true);
       return false;
     }
     if (!isFree) spinsAvailable--;
@@ -400,10 +416,21 @@
     return true;
   }
 
-  // Strict Adsgram rewarded logic
+  function mine() {
+    const now = Date.now();
+    if (now - lastMineTime < MINE_COOLDOWN) {
+      const remaining = Math.ceil((MINE_COOLDOWN - (now - lastMineTime)) / 1000);
+      showNotification(`⏳ Cooldown: ${remaining}s`, true);
+      return;
+    }
+    lastMineTime = now;
+    addCoins(MINE_REWARD, "Compute Reward");
+    saveGameData();
+  }
+
   async function watchRewardedAd(onReward, desc) {
     if (!adsgramInstance) {
-      if (confirm(`[Demo Mode] Watch simulated ad to get: ${desc}?`)) {
+      if (confirm(`[Demo Mode] Simulate ad to get: ${desc}?`)) {
         onReward();
         showNotification(`Granted: ${desc}`);
       }
@@ -423,26 +450,26 @@
     }
   }
 
-  function giveSpinTokens() { spinsAvailable += 5; updateSpinsUI(); showNotification("+5 Spins Added!"); }
-  function giveFiftyCoins() { addCoins(50, "Sponsor Reward"); }
+  function giveSpinTokens() { spinsAvailable += 50; updateSpinsUI(); showNotification("+50 Spins Added!"); }
   function giveHundredCoins() { addCoins(100, "Sponsor Reward"); }
   function giveFreeSpin() { spinsAvailable += 1; updateSpinsUI(); showNotification("+1 Spin Added!"); }
+  function doubleDailyReward() { claimDailyReward(true); }
 
-  function claimDailyRewardWithAd() {
+  function claimDailyReward(double = false) {
     const today = new Date().toDateString();
     if (lastClaimDate === today) {
       showNotification("Already claimed today!", true);
-      return;
+      return false;
     }
-    watchRewardedAd(() => {
-      let reward = 50 + (currentStreakDay * 10);
-      addCoins(reward, "Daily Claim");
-      lastClaimDate = today;
-      currentStreakDay = Math.min(7, currentStreakDay + 1);
-      streakDays = streakDays.map((_, idx) => idx < currentStreakDay);
-      updateStreakUI();
-      saveGameData();
-    }, "Daily Allocation");
+    let reward = 50 + (currentStreakDay * 10);
+    if (double) reward *= 2;
+    addCoins(reward, "Daily Claim");
+    lastClaimDate = today;
+    currentStreakDay = Math.min(7, currentStreakDay + 1);
+    streakDays = streakDays.map((_, idx) => idx < currentStreakDay);
+    updateStreakUI();
+    saveGameData();
+    return true;
   }
 
   function updateSpinsUI() {
@@ -491,18 +518,19 @@
   }
   
   function saveGameData() {
-    localStorage.setItem('spinGameData_v3', JSON.stringify({
-      balance, spinsAvailable, streakDays, lastClaimDate, currentStreakDay
+    localStorage.setItem('spinGameData_v2', JSON.stringify({
+      balance, spinsAvailable, lastMineTime, streakDays, lastClaimDate, currentStreakDay
     }));
   }
   
   function loadGameData() {
-    const saved = localStorage.setItem('spinGameData_v3');
+    const saved = localStorage.getItem('spinGameData_v2');
     if (saved) {
       try {
         const data = JSON.parse(saved);
         balance = data.balance;
         spinsAvailable = data.spinsAvailable;
+        lastMineTime = data.lastMineTime;
         streakDays = data.streakDays || streakDays;
         lastClaimDate = data.lastClaimDate;
         currentStreakDay = data.currentStreakDay || 1;
@@ -533,11 +561,11 @@
   }
   
   function bindAdsButtons() {
-    document.getElementById('watchAdCoinBtn').onclick = () => watchRewardedAd(giveFiftyCoins, "50 Tokens");
-    document.getElementById('watchAdSpinBtn').onclick = () => watchRewardedAd(giveSpinTokens, "5 Spins");
+    document.getElementById('watchAdSpinBtn').onclick = () => watchRewardedAd(giveSpinTokens, "50 Spins");
     document.getElementById('earnAdBtn').onclick = () => watchRewardedAd(giveHundredCoins, "100 Tokens");
     document.getElementById('earnSpinAdBtn').onclick = () => watchRewardedAd(giveFreeSpin, "1 Free Spin");
-    document.getElementById('waterdropAdBtn').onclick = () => claimDailyRewardWithAd();
+    document.getElementById('waterdropAdBtn').onclick = () => watchRewardedAd(() => doubleDailyReward(), "Double Daily Yield");
+    document.getElementById('dailyClaimBtn').onclick = () => claimDailyReward(false);
   }
   
   function init() {
@@ -553,6 +581,7 @@
       if (spinsAvailable > 0 && !isSpinning) performSpin(false);
       else if (spinsAvailable <= 0) showNotification("No spins! Watch sponsor ad for more.", true);
     };
+    document.getElementById('mineButton').onclick = () => mine();
     
     loadGameData();
     initNavigation();
